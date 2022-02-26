@@ -1,0 +1,11 @@
+/node_modules
+
+/dist
+
+*.sh
+
+/.vscode
+
+/.adminjs
+
+/coverage

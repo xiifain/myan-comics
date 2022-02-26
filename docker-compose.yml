@@ -1,0 +1,41 @@
+version: "3.8"
+
+volumes:
+  postgres_data:
+
+services:
+  nest:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    depends_on:
+      - postgres
+    container_name: myan-comics-nest 
+    links:
+      - postgres:postgres
+    volumes:
+      - .:/app:z
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER} 
+      POSTGRES_PASSWORD: S{POSTGRES_PASSWORD} 
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      NODE_ENV: development
+      PORT: 3000
+    ports:
+      - "3000:3000"
+  postgres:
+    image: postgres:14.1-alpine
+    container_name: myan-comics-postgres
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER} 
+      POSTGRES_PASSWORD: S{POSTGRES_PASSWORD} 
+      POSTGRES_DB: ${POSTGRES_DB} 
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
+      - type: volume
+        source: postgres_data 
+        target: /var/lib/postgresql/data
