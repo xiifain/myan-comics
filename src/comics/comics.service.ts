@@ -14,20 +14,15 @@ export class ComicsService {
   ) {}
 
   create(createComicDto: CreateComicDto): Promise<Comic> {
-    return this.comicRepository.save(createComicDto);
+    return this.comicRepository.save(createComicDto, { reload: true});
   }
 
   findAll(): Promise<Comic[]> {
     return this.comicRepository.find();
   }
 
-  async findOne(id: number): Promise<Comic> {
-    const comic = await this.comicRepository.findOne(id);
-    if (comic != undefined) {
-      return comic;
-    } else {
-      throw new HttpException('Comic Not Found', HttpStatus.NOT_FOUND);
-    }
+  findOne(id: number): Promise<Comic | undefined> {
+    return this.comicRepository.findOneOrFail(id);
   }
 
   async update(id: number, updateComicDto: (UpdateComicDto | UpdateComicImageDto)): Promise<Comic> {

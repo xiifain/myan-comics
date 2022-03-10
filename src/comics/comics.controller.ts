@@ -11,11 +11,13 @@ import {
   BadRequestException,
   HttpException,
   HttpStatus,
+  UseFilters,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ComicsService } from './comics.service';
 import { CreateComicDto } from './dto/create-comic.dto';
 import { UpdateComicDto } from './dto/update-comic.dto';
+import { Comic } from './entities/comic.entity';
 
 @Controller('comics')
 export class ComicsController {
@@ -32,8 +34,10 @@ export class ComicsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.comicsService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    return await this.comicsService.findOne(+id).catch(() => {
+      throw new HttpException(`Comic with ID ${+id} doesn\'t exists`, HttpStatus.NOT_FOUND);
+    });
   }
 
   @Patch(':id')

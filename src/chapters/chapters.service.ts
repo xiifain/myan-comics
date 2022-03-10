@@ -1,23 +1,45 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Comic } from '../comics/entities/comic.entity';
+import { EntityNotFoundError, Repository } from 'typeorm';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
+import { Chapter } from './entities/chapter.entity';
 
 @Injectable()
 export class ChaptersService {
-  create(createChapterDto: CreateChapterDto) {
-    return 'This action adds a new chapter';
+  constructor(
+    @InjectRepository(Chapter)
+    private chapterRepository: Repository<Chapter>,
+
+    @InjectRepository(Comic)
+    private comicRepository: Repository<Comic>,
+  ) {}
+
+  async create(
+    createChapterDto: CreateChapterDto,
+  ): Promise<Chapter | EntityNotFoundError> {
+    const comic: Comic = await this.comicRepository
+      .findOneOrFail(createChapterDto.comic)
+      .catch((error) => {
+        return error;
+      });
+    const chapter = await this.chapterRepository.save(
+      { ...createChapterDto, comic: comic }
+    );
+    return this.findOne(chapter.id);
   }
 
-  findAll() {
-    return `This action returns all chapters`;
+  findAll(): Promise<Chapter[]> {
+    return this.chapterRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} chapter`;
+  findOne(id: number): Promise<Chapter> {
+    return this.chapterRepository.findOneOrFail(id);
   }
 
   update(id: number, updateChapterDto: UpdateChapterDto) {
-    return `This action updates a #${id} chapter`;
+    return `Update Chapter action`;
   }
 
   remove(id: number) {

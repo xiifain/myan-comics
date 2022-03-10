@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
 import { ChaptersService } from './chapters.service';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
@@ -8,8 +8,10 @@ export class ChaptersController {
   constructor(private readonly chaptersService: ChaptersService) {}
 
   @Post()
-  create(@Body() createChapterDto: CreateChapterDto) {
-    return this.chaptersService.create(createChapterDto);
+  async create(@Body() createChapterDto: CreateChapterDto) {
+    return await this.chaptersService.create(createChapterDto).catch(() => {
+      throw new HttpException(`Cannot create chapter because comic with id ${createChapterDto.comic} doesn\'t exists`, HttpStatus.NOT_FOUND);
+    });
   }
 
   @Get()

@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
 import { CreateComicDto } from './create-comic.dto';
 
 export class UpdateComicDto extends PartialType(CreateComicDto) {
@@ -11,8 +11,4 @@ export class UpdateComicDto extends PartialType(CreateComicDto) {
   @IsString()
   @IsOptional()
   description?: string;
-
-  @IsNumber()
-  @IsOptional()
-  price?: number;
 }

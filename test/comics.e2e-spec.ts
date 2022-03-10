@@ -5,6 +5,8 @@ import { ComicsModule } from '../src/comics/comics.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as ormconfig from '../src/db/ormconfig';
 import { ConfigModule } from '@nestjs/config';
+import { ChaptersModule } from '../src/chapters/chapters.module';
+
 
 describe('ComicsController (e2e)', () => {
   let app: INestApplication;
@@ -14,6 +16,7 @@ describe('ComicsController (e2e)', () => {
       imports: [
         ConfigModule.forRoot(),
         ComicsModule,
+        ChaptersModule,
         TypeOrmModule.forRoot({
           keepConnectionAlive: true,
           ...ormconfig,
@@ -37,91 +40,133 @@ describe('ComicsController (e2e)', () => {
     });
 
     describe('/comics (POST) Tests', () => {
-      it('Normal with name', async () => {
-        const response = await request(app.getHttpServer())
-          .post('/comics')
-          .send({ name: 'Test Comic 1', price: 2500 })
-          .expect(201);
-        expect(response.body).toEqual({
-          id: expect.any(Number),
-          name: 'Test Comic 1',
-          price: 2500,
-          description: null,
-          image: null,
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String),
-        });
-      });
-
-      it('Empty Name', async () => {
-        return request(app.getHttpServer())
-          .post('/comics')
-          .send({ name: '' })
-          .expect(400, {
-            statusCode: 400,
-            message: [
-              'name should not be empty',
-              'price should not be empty',
-              'price must be a number conforming to the specified constraints',
-            ],
-            error: 'Bad Request',
+      describe('/comics (POST) Success', () => {
+        it('Name', async () => {
+          const response = await request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: 'Test Comic 1' })
+            .expect(201);
+          expect(response.body).toEqual({
+            id: expect.any(Number),
+            name: 'Test Comic 1',
+            description: null,
+            image: null,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
           });
-      });
+        });
 
-      it('Name with number', async () => {
-        return request(app.getHttpServer())
-          .post('/comics')
-          .send({ name: 23 })
-          .expect(400);
-      });
-
-      it('Name with boolean', async () => {
-        return request(app.getHttpServer())
-          .post('/comics')
-          .send({ name: true })
-          .expect(400);
-      });
-
-      it('Name with description', async () => {
-        const response = await request(app.getHttpServer())
-          .post('/comics')
-          .send({ name: 'Test Comic 2', description: 'Test Comic Description' })
-          .expect(201);
-        expect(response.body).toEqual({
-          id: expect.any(Number),
-          name: 'Test Comic 2',
-          description: 'Test Comic Description',
+        it('Name & Description', async () => {
+          const response = await request(app.getHttpServer())
+            .post('/comics')
+            .send({
+              name: 'Test Comic 1',
+              description: 'Description for the comic',
+            })
+            .expect(201);
+          expect(response.body).toEqual({
+            id: expect.any(Number),
+            name: 'Test Comic 1',
+            description: 'Description for the comic',
+            image: null,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+          });
         });
       });
 
-      it('Name with empty description', () => {
-        return request(app.getHttpServer())
-          .post('/comics')
-          .send({ name: 'Test Comic 2', description: '' })
-          .expect(400);
-      });
+      describe('/comics (POST) Fail', () => {
+        it('(S)Name, (F)Description (description empty)', async () => {
+          return request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: 'test', description: '' })
+            .expect(400);
+        });
 
-      it('Name with number description', () => {
-        return request(app.getHttpServer())
-          .post('/comics')
-          .send({ name: 'Test Comic 2', description: 200 })
-          .expect(400);
-      });
+        it('(S)Name, (F)Description (description number)', async () => {
+          return request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: 'test', description: 2500 })
+            .expect(400);
+        });
 
-      it('Name with boolean description', () => {
-        return request(app.getHttpServer())
-          .post('/comics')
-          .send({ name: 'Test Comic 2', description: false })
-          .expect(400);
+        it('(S)Name, (F)Description (description boolean)', async () => {
+          return request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: 'test', description: true })
+            .expect(400);
+        });
+
+        it('(F)Name, (S)Description (name empty)', async () => {
+          return request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: '', description: 'test desc' })
+            .expect(400);
+        });
+
+        it('(F)Name, (S)Description (name number)', async () => {
+          return request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: 123, description: 'test desc' })
+            .expect(400);
+        });
+
+        it('(F)Name, (S)Description (name boolean)', async () => {
+          return request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: true, description: 'test desc' })
+            .expect(400);
+        });
       });
     });
     describe('/comics (GET) Tests', () => {
-      it('/comics (GET) Empty Response', async () => {
-        const response = await request(app.getHttpServer())
-          .get('/comics')
-          .expect(200);
+      describe('/comics (GET) Success', () => {
+        it('Get All Comics (Empty List)', async () => {
+          return request(app.getHttpServer()).get('/comics').expect(200, []);
+        });
 
-        expect(response.body).toEqual([]);
+        it('Get All Comics (List with One Entry)', async () => {
+          const response = await request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: 'Comics Test in Get' });
+          return request(app.getHttpServer())
+            .get('/comics')
+            .expect(200, [{ ...response.body, chapters: []}]);
+        });
+
+        it('Get All Comics (List with Two Entry)', async () => {
+          const response = await request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: 'Comics Test in Get' });
+          const response1 = await request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: 'Comics Test in Get another' });
+          return request(app.getHttpServer())
+            .get('/comics')
+            .expect(200);
+        });
+
+        it('Get One Comics with ID', async () => {
+          const response = await request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: 'Comics One' });
+          return request(app.getHttpServer())
+            .get(`/comics/${response.body.id}`)
+            .expect(200);
+        });
+      });
+      describe('/comics (GET) Fail', () => {
+        it('Get One Comics with ID that doesn\'t exist', async () => {
+          const response = await request(app.getHttpServer())
+            .post('/comics')
+            .send({ name: 'Comics One Fail' });
+          return request(app.getHttpServer())
+            .get(`/comics/${response.body.id + 1}`)
+            .expect(404, {
+              statusCode: 404,
+              message: `Comic with ID ${+response.body.id + 1} doesn\'t exists`
+            });
+        });
       });
     });
   });

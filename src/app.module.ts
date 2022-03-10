@@ -10,6 +10,7 @@ import { ChaptersModule } from './chapters/chapters.module';
 
 import * as ormconfig from './db/ormconfig';
 import { ConfigModule } from '@nestjs/config';
+import { Chapter } from './chapters/entities/chapter.entity';
 
 AdminJS.registerAdapter({ Database, Resource });
 
@@ -21,7 +22,7 @@ AdminJS.registerAdapter({ Database, Resource });
     AdminModule.createAdmin({
       adminJsOptions: {
         rootPath: '/admin',
-        resources: [Comic],
+        resources: [Comic, Chapter],
       },
     }),
     ChaptersModule,
@@ -31,7 +32,7 @@ AdminJS.registerAdapter({ Database, Resource });
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
-    },
+    }
   ],
 })
 export class AppModule {}

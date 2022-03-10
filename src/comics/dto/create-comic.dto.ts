@@ -1,5 +1,4 @@
-import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateComicDto {
 
@@ -11,8 +10,4 @@ export class CreateComicDto {
   @IsOptional()
   @IsNotEmpty()
   description?: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  price: number;
 }
